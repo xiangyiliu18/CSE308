@@ -1,0 +1,6 @@
+gunicorn
+flask
+sqlalchemy
+pymysql
+ortools
+googlemaps
