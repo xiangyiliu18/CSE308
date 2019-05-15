@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+    {% block newHeader %}
+    <link rel="stylesheet" type="text/css" href="/static/css/multi.css">
+
+    <link rel="stylesheet" type="text/css" href="/static/css/create_campaign.css">
+    <script>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+         {% for msg in messages%}
+               alert('{{ msg}}');
+               {% endfor %}
+       {% endif %}
+    {% endwith %}
+  </script>
+  
+    {% endblock %}
+    {% block title %} <h3 id = "title"> Edit Compaigns </h3> {% endblock %}
+{%block main %}
+<!-----------------Create Compaign------------------>
+<br/>
+  <div class="container ">
+
+    <form method="post" action ="{{url_for('manager.editCampaign', u_email = session['info']['email']) }}" role="form">
+    <!---------------------------Compaign Name--------------------->
+    <div class="form-group form-inline">
+         <label class="col-lg-3" style="font-weight: bold; font-size: 18px;" > Choose Campaign : </label>
+            <select class="form-control col-lg-5" name="campaign_list" id="campaign_list">
+                <option value="null"></option>
+                {% for item in all_campaigns %}
+                <option value='{{item.name}}' {% if item.name == campaign_name %}selected{% endif %}>{{item.name}}</option>
+                {% endfor %}
+            </select>
+         <button class ="btn btn-primary" name="submit" value="select_campaign"> Select Campaign </button>
+    </div>
+
+    <div class="form-group form-inline">
+         <label class="col-lg-3" style="font-weight: bold; font-size: 18px;" for ="name"> Campaign Name: </label>
+          <input class="form-control col-lg-5 input-md" id ="name" type="text" name ="name" placeholder ="Type in New Campaign Name" {% if campaign_name %} value="{{campaign_name}}"{% endif %}>
+    </div>
+    <hr/><br/>
+
+    <!---------------------------Select Managers-------------------->
+     <div class="form-group">
+        <label class="col-lg-3" style="font-weight: bold; font-size: 18px;" for ="managers"> Choose Managers: </label>
+         <select multiple="multiple" name="managers" id="managers">
+                {% for ele in managers %}
+                  <option selected="selected" value ="{{ ele }}">{{managers[ele]}} ({{ele}})</option>
+                {% endfor %}
+                {% for ele in unselected_managers %}
+                    <option value ="{{ ele }}">{{unselected_managers[ele]}}({{(ele)}})</option>
+                {% endfor %}
+         </select>
+     </div>
+    <hr/><br/>
+      <!---------------------------Select Canvassers------------------->
+
+     <div class="form-group">
+        <label class="col-lg-3" style="font-weight: bold; font-size: 18px;" for ="canvasser"> Choose Canvassers: </label>
+         <select multiple="multiple" name="canvassers" id="canvassers">
+
+                {% for ele in canvassers %}
+                    <option selected="selected" value = "{{ ele }}">{{canvassers[ele]}}({{(ele)}})</option>
+                {% endfor %}
+                {% for ele in unselected_canvassers %}
+                    <option value ="{{ ele }}">{{unselected_canvassers[ele]}}({{(ele)}})</option>
+                {% endfor %}
+         </select>
+     </div>
+    <hr/></br>
+
+    <!---------------------------Dates Part--------------------->
+     <div  id = "error" {% if not result %} style= "display:none" {% elif ("Error" in result) %} class ="alert alert-danger alert-dismissable" style = "display:block" {% else %} class ="alert alert-success alert-dismissable" style = "display:block" {% endif %}>
+          <a href="#" class="close" data-dismiss="alert">&times;</a> <strong> {{ result }} !!! </strong> 
+     </div>
+    <div class="form-group form-inline">
+        <label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for ="start_date">Start Date: </label>
+        <input class ="form-control col-lg-5" type="date" data-date-format="yyyy-mm-dd" name="start_date" id ="start_date" value="{{start_date}}" onchange="validDates1('{{start_date}}', '{{end_date}}')">
+    </div>
+    <div class="form-group form-inline">
+        <label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for ="end_date">End Date: </label>
+        <input class ="form-control col-lg-5" type="date" data-date-format="yyyy-mm-dd" name="end_date" id ="end_date" value="{{end_date}}" onchange="validDates1('{{start_date}}', '{{end_date}}')">
+    </div>
+    <hr/><br/>
+  <!---------------------------Questions Part--------------------->
+  <div class="form-inline">
+     <i class="fa fa-angle-double-right prefix"></i><label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for ="question">Set Questions:</label>
+    </div>
+     <br/>
+    <textarea class="form-control" rows="5" id="questions_text" name="questions_text" placeholder="Please enter one yes/no queston per line(eg: Did you heard of our product before?)">{% for q in question %}{{q.question + "\n"}}{% endfor %}</textarea>
+    <hr/><br/>
+ <!---------------------------Talking Point Part--------------------->
+     <div class="form-group form-inline">
+        <label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for ="talking">Set Talking Point: </label>
+         <textarea class="form-control col-lg-5" rows="3" id="talking" name='talking' placeholder="Without Any Talking Points">{{talking}}</textarea>
+    </div>
+    <hr/><br/>
+ <!---------------------------Duration Part--------------------->
+     <div class="form-group form-inline ">
+        <label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for="duration">Set Duration:</label>
+            <input class="form-control col-lg-5 input-md" type="number" id="duration" step="1" name="duration" min="1" max="300" placeholder="Duration should be between 1 and 300 minutes" value="{{duration}}" /><span style="padding-left: 5px; font-size: 18px">minutes</span>
+    </div>
+    <hr/><br/>
+ <!---------------------------Location--------------------->
+    <div class="form-inline">
+     <i class="fa fa-angle-double-right prefix"></i><label class="col-lg-2" style="font-weight: bold; font-size: 18px;">Set Locations: </label>
+    </div>
+    <textarea class="form-control" rows="5" id="locations_text" name="locations_text" placeholder="Contains one address per line, in the following format: NUMBER, STREET, UNIT, CITY, STATE, ZIP">{% for l in location %}{% if not loop.last%}{{l.location + "\n"}}{% elif loop.last %}{{l.location}}{% endif %}{% endfor %}</textarea>
+    <hr/>
+
+    <div class="form-group form-inline">
+        <label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for ="location">Search location: </label>
+         <input class="form-control col-lg-5 input-md" id="location" type="text" name ="location" placeholder="Search locations here">
+         <a class ="btn btn-primary" id="add_location" onclick='add_location()'> Add New Location </a>
+    </div>
+    <div class="form-group form-inline">
+        <div id="map" name="map_location" class="col-lg-8" style="margin-left: 10%; height: 350px;background-color: grey"></div>
+    </div>
+
+
+    <hr/><br/>
+
+    <div class="form-group form-inline" style="margin-left: 30%">
+         <button class="btn btn-success btn-lg" id="submit" name="submit" type="submit" value ="submit_change" onclick="check_submit()"> <i class="fa fa-check"></i> Edit Campaign </button>
+    </div>
+    </form>
+  </div>
+
+{% block script %} 
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var campaign = document.getElementById('campaign_list').value;
+             if (campaign && campaign != "null"){
+                document.getElementById('submit').disabled = false;
+             }else{
+                document.getElementById('submit').disabled = true;
+    }
+    });
+    </script>
+    <script src="/static/javascript/manager_js/multi.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGuEpRycbTYDCcS6uxiot0x0eSLkpTbiY&libraries=places&callback=initAutocomplete"></script>
+    <script  src="/static/javascript/manager_js/create_campaign.js"></script> {% endblock%}
+{%  endblock %}

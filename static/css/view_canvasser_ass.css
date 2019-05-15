@@ -1,0 +1,35 @@
+body {
+     font-family: Arial, Helvetica, sans-serif;
+    background: #fafafa;
+    background-color:#E8F4FB;
+}
+
+
+#assignment{
+	font-size: 18px;
+	margin-left: 5%;
+	padding-top: 10px;
+}
+
+#instructions{
+	border: 1;
+}
+
+#canvas-btn {
+		display: flex;
+		min-width: 330px;
+		margin: 30px auto;
+}
+
+#canHome:hover{
+	font-size: 23px;	
+}
+
+.list-group{
+    max-height: 300px;
+   	max-width: 100%;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+

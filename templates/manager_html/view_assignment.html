@@ -1,0 +1,179 @@
+{% extends "layout.html" %}
+    {% block newHeader %} 
+<script>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+       {% for msg in messages%}
+             alert('{{ msg}}');
+             {% endfor %}
+     {% endif %}
+  {% endwith %}
+</script>
+
+
+
+ <script type="text/javascript">
+      $(document).ready(function () {
+          // Get all locations
+          var locations=[]
+          {% for instance in loc %}
+            var one_location=[];
+            one_location.push('{{instance[0]}}', '{{instance[1]}}','{{instance[2]}}');
+            locations.push(one_location);
+         {% endfor %}
+
+        // Generate Map
+        var mapOptions = {
+            center: new google.maps.LatLng(40.9256538, -73.140943),
+            zoom: 13
+          }
+          map = new google.maps.Map(document.getElementById("map"), mapOptions);
+              var infowindow = new google.maps.InfoWindow();
+
+        // Inital Markers
+          var marker, i;
+          var bounds = new google.maps.LatLngBounds();
+
+        // Create one marker for each location
+        for (i = 0; i < locations.length; i++) { 
+          marker = new google.maps.Marker({
+            position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+            label:"#"+i,
+            title: locations[i][0],
+            map: map
+          });
+
+          bounds.extend(marker.getPosition());
+          google.maps.event.addListener(marker, 'click', (function(marker, i) {
+            return function() {
+              infowindow.setContent(locations[i][0]);
+              infowindow.open(map, marker);
+              map.setCenter(marker.getPosition());
+              map.setZoom(16);
+              // If close infowindow, then go back to default mapsetting
+              google.maps.event.addListener(infowindow, 'closeclick', function() {
+                    map.fitBounds(bounds);
+              });
+            }
+          })(marker, i));
+        }
+        // Let us to see all markers together
+        map.fitBounds(bounds); 
+      });
+</script>
+
+    <link href="/static/css/create_canvass.css" rel="stylesheet"> 
+    <link href="/static/css/view_ass.css" rel="stylesheet"> 
+    {% endblock %}
+    {% block title %} <h3 id = "title"> View Assignments </h3> {% endblock %}
+  {%block main %}
+<!-----------------View Compaign------------------>
+
+       <div class="container"> 
+      <br/>
+      <form  method="post" action="{{ url_for('manager.view_assignment', u_email =session['info']['email'])}}" role="form">
+        <div class="form-group form-inline">
+             <label class="col-lg-3" style="font-weight: bold; font-size: 18px;" > Choose Campaign : </label>
+                <select class="form-control col-lg-5" name="campaign_list" id="campaign_list">
+                    <option value="null">Choose ..</option>
+                     {% for ele in all_camp_ass %}
+                      <option value="{{ele.name}}">{{ele.name}}</option>
+                     {% endfor %}
+                </select>
+             <button class ="btn btn-primary" name="submit" value="select_campaign" style="margin-left: 1%;"> Select </button>
+        </div>
+    </form>
+       <hr/>
+            <div class="table-responsive">
+                <table id = "ass-table" cellspacing="0" width="100%" class="table table-bordered table-hover" data-cache = "false">
+  <!------------Table Headers------------------->
+              <thead class="thead-dark">
+                  <tr>
+                    <th  data-field ="index" class="column-header col-name"  style="text-align:center"> Task#
+                      <i class = "fa fa-sort-up float-right"> </i>
+                    </th>
+                     <th  data-field = "location_num" class="column-header col-duration"  style="text-align:center"># of Locations
+                      <i class = "fa fa-sort-up float-right"> </i>
+                    </th >
+                    <th  data-field = "date" class="column-header col-start" style="text-align:center">The Date
+                       <i class = "fa fa-sort-up float-right "> </i>
+                    </th>
+                    <th  data-field = "can_name" class="column-header col-end"  style="text-align:center"> Canvasser Name
+                      <i class = "fa fa-sort-up float-right "> </i>
+                    </th >
+                    <th  data-field = "can_email" class="column-header col-end"  style="text-align:center"> Canvasser Email
+                      <i class = "fa fa-sort-up float-right "> </i>
+                    </th >
+                    <th  data-field = "duration" class="column-header col-duration"  style="text-align:center">Duration
+                      <i class = "fa fa-sort-up float-right"> </i>
+                    </th >
+                     <th style="text-align:center"> See Details </th>
+                 </tr>
+              </thead>
+            {% if ass_detail|length > 0  %}
+              {% for ele in ass_detail %}
+            <tr>  
+              <td class="list-buttons-column"  style="font-size: 18px; text-align:center">## </td>
+              <td class="list-buttons-column" style="font-size: 18px; text-align:center">{{(ass_detail[ele][1])|length}}</td>
+              <td class="list-buttons-column" style="font-size: 18px; text-align:center">{{ ele.theDate }} </td>
+              <td class="list-buttons-column" style="font-size: 18px; text-align:center">{{(ass_detail[ele][0]).name}}</td>
+             <td class="list-buttons-column" style="font-size: 18px; text-align:center">{{(ass_detail[ele][0]).email}}</td>
+             <td class="list-buttons-column" style="font-size: 18px; text-align:center">{{camp_obj.duration}}</td>
+              <td class="list-buttons-column" style="text-align:center">
+            <form method ="post" action="{{url_for('manager.view_assignment_id',assigmentId=ele.id) }} ">
+                        <button  type ="submit" class="btn btn-outline-info detail" > <i class="fa fa-info-circle"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+          </table>
+       </div>
+       <hr>
+  {% if loc and (loc|length > 1) %}
+      <div class="panel panel-primary col">
+          <div class="card" style ="margin-left: 5%;">
+            <h5 class="card-header">View Details</h5>
+            <div class="card-body" style ="margin-left: 5%;">
+              <h5 class="card-title btn btn-secondary btn-block">See Locations</h5>
+                  <div class="alert alert-success" role="alert">
+          <i class="fa fa-x fa-info-circle"></i><span style ='margin-left: 1%; font-size: 18px; color: black;'>You have two ways to see locations: <mark>On List</mark> Or <mark> On Map </mark> </span>
+                  </div>
+                  <div>
+                  <button class="btn btn-primary" id="see_list" type="button" style="margin-right: 2%;" onclick="toggleL()">See on List</button>
+                  <button class="btn btn-primary" type="button" id="see_map" onclick="toggleM()">See on  Map </button>
+                </div>
+                <br/><hr/>
+             <!----------------Locations on List------->
+          <div class="panel panel-primary col" id="location_list1" style="margin-right: 1%; display: none;">
+            <div class="panel-heading" style="margin-left: 5%;"><h3 class="panel-title">Locations on List</h3></div>
+                <div class="panel-body">
+                  <ul class="list-group">
+                    {% for l in loc %}
+                    <li class="list-group-item" style="font-weight: bold;"><mark>Location:</mark>&nbsp&nbsp {{l[0]}}</li>
+                    
+                    {% endfor %}
+                  </ul>
+              </div>
+        </div>
+        <!----------------Locations on Map------->
+         <div class="panel panel-primary col" id="location_map1" style="margin-right: 1%; display: none;" >
+              <div class="panel-heading" style="margin-left: 5%;"><h3 class="panel-title">Locations on Map</h3>
+              </div>
+              <div class="panel-body">
+                <div id="map" name="map" style=" height: 300px; width :100%; background-color: grey"></div>
+              </div>
+            </div> 
+              <br/><hr/>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+  
+  </div>
+
+{% block script %}
+   <script src="/static/javascript/manager_js/view_assignment.js"></script> 
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGuEpRycbTYDCcS6uxiot0x0eSLkpTbiY&libraries=places&callback=initAutocomplete"></script>
+    {% endblock%}
+{%  endblock %}

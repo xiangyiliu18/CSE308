@@ -1,0 +1,199 @@
+{% extends "header.html" %}
+
+{% block header %}
+    <!-- Custom styles for this login page -->
+    <link href="/static/css/done_canvas.css" rel="stylesheet">
+    <link href="/static/css/view_canvasser_ass.css" rel="stylesheet">
+    <!----------The script to inital location Makers---->
+    {% if detail %}
+   <script type="text/javascript">
+      $(document).ready(function () {
+          // Get all locations
+          document.getElementById('submit').disabled=false;
+          var locations=[]
+          {% for instance in detail['location'] %}
+            var one_location=[];
+            one_location.push('{{instance.location}}', '{{instance.lat}}','{{instance.lng}}','{{ instance.order}}');
+            locations.push(one_location);
+         {% endfor %}
+
+        // Generate Map
+        var mapOptions = {
+            center: new google.maps.LatLng(40.9256538, -73.140943),
+            zoom: 13
+          }
+          map = new google.maps.Map(document.getElementById("map"), mapOptions);
+              var infowindow = new google.maps.InfoWindow();
+
+        // Inital Markers
+          var marker, i;
+          var bounds = new google.maps.LatLngBounds();
+
+        // Create one marker for each location
+        for (i = 0; i < locations.length; i++) { 
+          marker = new google.maps.Marker({
+            position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+            label:"#"+ locations[i][3],
+            title: locations[i][0],
+            map: map
+          });
+
+          bounds.extend(marker.getPosition());
+          google.maps.event.addListener(marker, 'click', (function(marker, i) {
+            return function() {
+              infowindow.setContent(locations[i][0]);
+              infowindow.open(map, marker);
+              map.setCenter(marker.getPosition());
+              map.setZoom(16);
+              // If close infowindow, then go back to default mapsetting
+              google.maps.event.addListener(infowindow, 'closeclick', function() {
+                    map.fitBounds(bounds);
+              });
+            }
+          })(marker, i));
+        }
+        // Let us to see all markers together
+        map.fitBounds(bounds); 
+      });
+</script>
+{% endif %}
+
+{% endblock %}
+
+<!----------------------BODY PART---------------------------------------------->
+{% block body %}
+      <h2 style="text-align: center;padding-top:10px;">View Assignments</h2>
+      <hr/>
+    <button class="btn btn-info" type="button" style="margin-left:5%" id="canHome" onclick="window.location.href='{{ url_for( 'canvasser.canPage', u_name = session['info']['name'])}}' ">HomePage</button><br/><br/>
+    <!-------------Basic Instruction--------------->
+     <h4 style="margin-left:5%"><span style="padding-left:5px; font-weight: bold;">Basic Instructions : </span></h4>
+     <h5 style="margin-left:10%">Select a canvassing assignment from the list below to see details<br/>
+        <ul>
+              <li>Include a map with markers at the locations</li>
+              <li>Include a list wit addresses of the locations</li>
+        </ul>  
+    </h5><hr/>
+    <form id="assignment_form" method="post" action="{{ url_for('canvasser.view_assignment_detail')}}" role="form">
+    <!-- ----------- All Assignments on List -->
+        <div class="form-group">
+            <h2 for="assignment" style="margin-left: 2%;"><span class="badge badge-pill badge-success">All assignments (including past and upcoming) (select one) :</span></h2>
+            <br/>
+            <div class="row">
+              <select class="form-control col-6" id="assignment" name="assignment" onchange="toggle_btn()" required autofocus>
+              <!------ Past Assignment------->
+              <option value="None">Choose...</option> 
+              <optgroup label="Past Assignment: ">
+                {% if past_assignments is defined and past_assignments|length > 0 %}
+                {% for instance in past_assignments %}
+               <!-------instance = Assignment object----------->
+                  <option value="{{instance.id}}">Assignment #{{instance.id}} on {{instance.theDate}}</option>
+                {% endfor %}
+                {% endif %}
+              </optgroup>
+              <!------ Upcoming Assignment------->
+              <optgroup label="Upcoming Assignment: ">
+                {% if upcoming_assignments is defined and upcoming_assignments|length > 0 %}
+                  {% for instance in upcoming_assignments %}
+               <!-------instance = Assignment object----------->
+                  <option value="{{instance.id}}">Assignment #{{instance.id}} on {{instance.theDate}}</option>
+                  {% endfor %}
+                {% endif %}
+              </optgroup>
+              </select>
+              <button class="btn btn-primary" style="margin-left: 1%;" name="submit" id="submit" type="submit"> See details </button>
+            </div>
+        </div>
+    </form>
+    <br/><hr/><br/>
+
+  <!----------- Begin here to show assignment information----------->
+{% if detail %}
+<h2 style="margin-left: 2%; text-align: center;"> <u>The Assignment On: {{detail['assignment'].theDate }}</u></h2>
+<h2 style="margin-left: 2%; margin-bottom: 1%;"><span class="badge badge-pill badge-success">The detail assignment for locations :</span></h2>
+  <div class="row">
+<!----------------Locations on List------->
+<div class="panel panel-primary col" id="result_panel1" style="margin-left: 1%;">
+      <div class="panel-heading" style="margin-left: 5%;"><h3 class="panel-title"><strong>Locations on List:</strong></h3>
+      </div>
+      <div class="panel-body">
+          <ul class="list-group">
+            {% for ele in detail['location'] %}
+                <a href="#" class="list-group-item list-group-item-action list-group-item-light">#{{ele.order}}: {{ele.location}} (lat= {{ele.lat}}, lng={{ele.lng}})</a>
+            {% endfor %}
+        </ul>
+      </div>
+    </div> 
+<!----------------Locations on Map------->
+  <div class="panel panel-primary col" id="result_panel" style="margin-right: 1%;">
+      <div class="panel-heading" style="margin-left: 5%;"><h3 class="panel-title"><strong>Locations on Map:</strong></h3>
+      </div>
+      <div class="panel-body">
+        <div id="map" name="map" style=" height: 300px;background-color: grey"></div>
+      </div>
+    </div> 
+  </div>
+<br/><hr/>
+<!----- Basic information------>
+<h2 style="margin-left: 2%; margin-bottom: 1%;"><span class="badge badge-pill badge-success">The detail assignment for basic information :</span></h2>
+    <div class="col-md-9" style="margin-left: 20%; font-size: 20px;">
+        <div class="card-body">
+            <div class="row">
+               <div class="col-md-12">
+                 <h4><i class="fa fa-info-circle fa-lg"></i><span style="padding-left:10px; font-weight: bold;">Basic Information</span></h4> 
+                 <hr/>
+                </div>
+            </div>
+            <!---------Details----------->
+            <div class="row">
+                <div class="col-md-12">
+                        <!-------- Canvasser Name--------->  
+                        <div class="form-group row">
+                          <label for="username" class="col-3 col-form-label">Canvasser's Name:</label> 
+                            <div class="col-6">
+                                <input id="username" name="username" class="form-control here" {% if detail %} value="{{ detail['canvasser_name'] }}" {% endif %} readonly type="text">
+                                </div>
+                        </div>
+                        <!--------Campaingn Name--------->  
+                        <div class="form-group row">
+                          <label for="campName" class="col-3 col-form-label">Campaign Name:</label> 
+                            <div class="col-6">
+                                <input id="campName" name="campName" class="form-control here" placeholder="None" {% if detail %} value="{{ detail['compaign_name'] }}" {% endif %} readonly type="text"> 
+                              </div>
+                        </div>                      
+                        <!---------Talking Point--------->
+                        <div class="form-group row">
+                                <label for="talking" class="col-3 col-form-label">Talking Point</label> 
+                                <div class="col-8">
+                                  <input id="talking" name="talking" placeholder="None" class="form-control" type="text" {% if detail %} value="{{ detail['talking'] }}" {% endif %} readonly>
+                                </div>
+                        </div>
+
+                        <!---------Questions--------->                    
+                        <div class="form-group row">
+                            <label for="questions" class="col-3 col-form-label">Assignment Questionaire</label> 
+                                <div class="col-8">
+                                  <select class="col-8" id="questions" name="questions" readonly>
+                                    {% for q in detail['questions'] %}
+                                    <option>{{ q.question }}</option>
+                                    {% endfor %}
+                                  </select>
+                                </div>
+                        </div>
+                        <!--------Has Done?-------->                    
+                          <div class="form-group row ">
+                            <label for="done" class="col-3 col-form-label"> Did you done? </label>
+                              <label class="toggle" style="word-spacing: 10px;">
+                                  <input type="radio" id="done" name="done" {% if detail and detail['assignment'].done %} checked {% endif %} disabled> <span class="label-text">Yes</span>
+                                  <input type="radio" id="done" name="done" {% if detail and ( not detail['assignment'].done )%} checked {% endif %} disabled> <span class="label-text">No</span>
+                              </label>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr/>
+    {% endif %}
+    <!-- map js files--> 
+    <script src="/static/javascript/canvasser_script/view_assignment.js" ></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGuEpRycbTYDCcS6uxiot0x0eSLkpTbiY&libraries=places&callback=initAutocomplete"></script>
+{%  endblock %}

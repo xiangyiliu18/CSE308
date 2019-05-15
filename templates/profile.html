@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Bootstrap core CSS -->
+    <link href="/static/css/bs_css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/js_css/jquery-ui.min.css">
+    <link rel="stylesheet" href="/static/css/bs_css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/bs_css/font-awesome.css">
+    <link rel="icon" href="/static/image/logo.png">
+ 
+    <script src="/static/jquery/jquery.js"></script>
+
+    <script src="/static/javascript/bs_js/jquery.min.js"></script>
+    <script src="/static/javascript/bs_js/jquery-ui.min.js"></script>
+    <script src="/static/javascript/bs_js/bootstrap.min.js"></script>
+    <script src="/static/javascript/bs_js/bootstrap-toggle.min.js"></script>
+
+    <script src="/static/javascript/profile.js"></script>
+  </head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light" style =" background-size: 100%; background-image: url(/static/image/header.png)">
+      <a class="navbar-brand" href="#"><img src="/static/image/logo.png"  class="logo" height="40"> <strong>Super Canvasser System</strong></a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar1" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbar1">
+          <ul class="navbar-nav ml-auto">
+      <!----------Handle for HomePage-------->
+          <li class="nav-item">
+              <a {% if session['info']['account'] == 'admin' %} href = "{{ url_for('admin.adminPage',u_name=session['info']['name']) }}"{% elif session['info']['account'] == 'manager' %} href = "{{ url_for('manager.manPage', u_name=session['info']['name']) }}"{% elif session['info']['account'] == 'canvasser' %} href = "{{ url_for('canvasser.canPage', u_name=session['info']['name']) }}" {% endif %} > <button class="btn btn-outline-dark" type="button" align="middle"  style="margin-left: 20px; font-size:18px;"> Home </button> </a>
+          </li>
+        </ul>
+    </div>
+  </nav>
+  <div class="container ">
+    <h1>Edit Profile</h1> <hr>
+    <form class="form-horizontal" id='profile-form'  enctype="multipart/form-data" method="post" action ="{{url_for('auth.profile', u_email = session['info']['email']) }}" role="form">
+
+    <div class="row">
+    <!---------------------Avatar Part---------------------------->
+      <div class="col-md-3">
+        <div class="text-center">
+         <p>{{ session['info']['name'] }}<p>
+          <img id = 'profile-avatar' class="avatar img-circle img-thumbnail" {% if (session and session['info']['avatar']) and (session and session['info']['avatar']) !='None' %} src="/static/image/profile/{{ session['info']['avatar'] }}" {% else %}  src="/static/image/profile/avatar.png" {% endif %} alt="avatar">
+          <h6>Choose your avatar...</h6>
+          <input id = "file" name ='file' type="file" multiple accept='image/*' class="form-control">
+        </div>
+      </div> 
+  <!-- Basic Info---------------->
+      <div class="col-md-9 personal-info">
+        <div  id = "error" {% if not result %} style= "display:none" {% elif ("Error" in result) %} class ="alert alert-danger alert-dismissable" style = "display:block" {% else %} class ="alert alert-success alert-dismissable" style = "display:block" {% endif %}>
+          <a href="#" class="close" data-dismiss="alert">&times;</a> <strong> {{ result }} !!! </strong> 
+        </div>
+        <h3>Personal Info</h3> <hr>
+  <!---------------------------Profle-Name Part--------------------->
+        <div class="form-group">
+          <label class="col-lg-3 control-label" for = "fullname" > Name (Fullname) </label>
+          <div class="col-lg-8">
+            <input id ="name" name ="name" class="form-control input-md" type="text" placeholder ="Name (Fullname)" value="{{ session['info']['name'] }}" required autofocus>
+          </div>
+        </div>
+      <!---------------------------Profile-email Part--------------------->
+          <div class="form-group">
+            <label class="col-lg-3 control-label" for ="email"> Email Address </label>
+            <div class="col-lg-8">
+              <input class="form-control input-md" id ="email" type="email" name ="email" placeholder = "Email Address" value="{{ session['info']['email'] }}" required autofocus>
+            </div>
+          </div>
+      <!---------------------------Profile-password Part--------------------->
+          <div class="form-group">
+            <label class="col-md-3 control-label" for="password" > Password </label>
+            <div class="col-md-8">
+              <input class="form-control input-md" id = "password" name = "password" type="password" placeholder = "password" value="{{ session['info']['password'] }}"required>
+              <i id ="toggle-password" class = "fa fa-fw fa-eye-slash field-icon col-md-8"></i>
+            </div>
+          </div>
+      <!--------------------Profile-confirm password Part--------------------->
+        <div class="form-group">
+            <label class="col-md-3 control-label" for="confirm-password" >Confirm Password </label>
+            <div class="col-md-8">
+              <input class="form-control input-md" id = "confirm-password" name = "confirm-password" type="password" placeholder="Confirm Password" value ="{{ session['info']['password'] }}" required>
+              <i id ="toggle-confirm-password" class = "fa fa-fw fa-eye-slash field-icon col-md-8"></i>
+            </div>
+        </div>
+  <!---------------------------Choice Part--------------------->
+       <div class="form-group">
+          <div class="col-md-4">
+            <button class="btn btn-success" id ="submit-info" name = "submit" value ="saved" type="submit"><i class="fa fa-check-circle"></i> Saved </button>
+            <button type ="reset" id ="reset" name ="reset" class="btn btn-danger"><i class="fa fa-minus-square"></i> Reset </button>
+          </div>
+        </div>
+       </div>
+    </div>
+    </form>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,51 @@
+{% extends "header.html" %}
+
+{% block header %}
+   <!------ CSS links------>
+      <link href="/static/css/fullcalendar_css/fullcalendar.css" rel='stylesheet' />
+      <link href="/static/css/fullcalendar_css/fullcalendar.print.css" rel='stylesheet' media='print' />
+      <link href="/static/css/canvasser.css" rel="stylesheet">
+ <!------ Scripts ------>
+      <script type="text/javascript" src="/static/javascript/canvasser_script/fullcalendar_jq.js"></script>
+      <script type="text/javascript" src="/static/javascript/canvasser_script/fullcalendar.js"></script>
+        <!-- Alert for flash message-->
+      <script>
+          {% with messages = get_flashed_messages() %}
+            {% if messages %}
+             {% for msg in messages%}
+                   alert('{{ msg}}');
+                   {% endfor %}
+           {% endif %}
+        {% endwith %}
+      </script>
+{% endblock %}
+
+<!----------------------BODY PART---------------------------------------------->
+{% block body %}
+    <!-- main functional parts -->
+    <div class="container">
+      <h2 style="text-align: center;padding-top:10px;">Canvasser Management System -- {{u_name}}</h2>
+      <hr/>
+      <div class="alert alert-success" role="alert">
+          <i class="fa fa-2x fa-info-circle"></i><span style ='margin-left: 1%; font-size: 18px; color: black;'>Click on one empty date or select one range of dates to set your availability, Re-click on setted date to delete your availability</span>
+    </div>
+      <!-- calendar implementation -->
+      <div id='wrap'>
+        <div id='calendar'></div>
+        <div style='clear:both'></div>
+      </div>
+    </div> 
+   <div class="row" style="margin-left: 25%; margin-top: 1%;">
+      <button style="margin-right:2%;" class="btn btn-outline-success btn-lg" type="button" id="canvas-btn" onclick="window.location.href='{{ url_for('canvasser.view_assignment', u_email = session['info']['email'] ) }}' ">View All Assignments</button>
+     <button class="btn btn-outline-success btn-lg" type="button" id="canvas-btn" onclick="window.location.href='{{ url_for('canvasser.create_canvass')}}'">Create Canvassing Assignment</button>
+  </div>
+    
+  <!-- scripts below will taking care of calendar javascript interactions-->
+  <script type=text/javascript>
+    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+  </script>
+  <script type="text/javascript"  src="/static/javascript/canvasser_script/canvas.js"></script>
+  <script type="text/javascript">
+    canvasEvents = myFunc({{avails|tojson}})
+  </script>
+{%  endblock %}

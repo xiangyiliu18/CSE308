@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+   <!----Default CSS and JS files--->
+    <link rel="icon" href="/static/image/logo.png">
+    <link href="/static/css/bs_css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/js_css/jquery-ui.min.css">
+    <link rel="stylesheet" href="/static/css/bs_css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/bs_css/font-awesome.css">
+
+    <script src="/static/jquery/jquery.min.js"></script>
+    <script src="/static/javascript/bootstrap.min.js"></script>
+
+    <!----Customize CSS and JS files--->
+     <link href="/static/css/home.css" rel="stylesheet">
+     <script src="/static/javascript/home.js"> </script>
+     <title> Super Canvasser System Homepage</title>
+   </head>
+
+<body style ="background-image: url('/static/image/home.jpg')">
+<script>
+    {% with errors = get_flashed_messages() %}
+      {% if errors %}
+        {% for msg in errors %}
+          alert('{{ msg }}');
+        {% endfor %}
+     {% endif %}
+  {% endwith %}
+  </script>
+<!----------------Navigation Part------------------------>
+<nav class="navbar navbar-light navbar-expand-lg bg-light py-md-0">
+  <a class="navbar-brand" href="#"><img src="/static/image/logo.png"  class="logo" height="40">  Super Canvasser</a>
+  <div class="collapse navbar-collapse" id="navbar">
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item" style ="padding-right: 6px;">
+        <button class="btn btn-lg" type="button" id="login-btn" onclick="login_fun()">Log In</button> 
+      </li>
+      <li class="nav-item">
+        <button class="btn btn-lg" type="button" id="signup-btn" onclick="signup_fun()">Sign Up</button>
+      </li>
+    </ul>
+  </div>
+</nav>
+<!-------------------Home Page Website--------------------->
+<div class="container" id ="container" {% if (index|int) <= 0 %} style = "display: block;" {% else %} style = "display: none;"{% endif %}>
+  <p><span style="font-size: 55px;"> Welcome </span></p>
+  <p><span style="font-size: 45px; font-style:italic; padding-left: 8%;">Super Canvasser System</span></p>
+  <p><span style="opacity: 0.5; font-size: 16px; font-style: italic;padding-left: 8%;">This is the best campaign management system</span></p>
+  <p><span style="opacity: 0.5; font-size: 16px; font-style: italic;padding-left: 22%;">------ Conor Beck, Kevin Lin, Xiang Li, Xiangying Liu</span></p>
+</div>
+<!----------Create New Account/ Sign Up---------------->
+<div id="signup-modal" class="modal" {% if index|int == 1 %} style="display: block" {% else %} style="display: none;" {% endif %}>
+  <span onclick="window.location.href='{{ url_for('auth.home', index = 0) }}'" class="close" title="Close">&times;</span>
+
+  <form class="form-horizontal" id="signup-form" enctype="multipart/form-data" method="post" action="{{ url_for('auth.signup') }}" role="form">
+     <div class="row">
+    <!-------------Avatar Part---------------------->
+      <div class="col-md-3">
+        <div class="text-center">
+          <img id ="avatar" class="avatar img-circle img-thumbnail" src="/static/image/profile/avatar.png" alt="avatar">
+          <h6>Choose your avatar...</h6>
+          <input id = "file" name ="file" type="file" multiple accept="image/*" class="form-control" onchange=" file_change()">
+        </div>
+      </div> 
+ <!---------------Core Part for signup------------>
+      <div class="col-md-9">
+        <h3>Create New Account</h3> <hr><br><br>
+  <!----------------Main Information------------->
+        <div class="form-group form-inline">
+          <label class="col-lg-3 control-label" for = "name" >Name (Fullname)</label>
+            <input name ="name" class="form-control col-md-5 input-md" type="text" placeholder ="Name (Fullname)" required autofocus>
+        </div>
+
+        <div class="form-group form-inline">
+            <label class="col-lg-3 control-label" for ="email">Email</label>
+              <input class="form-control input-md col-md-5" type="email" name ="email" placeholder = "Email Address" required>
+        </div>
+      <!-----------password Part-------------->
+        <div class="form-group form-inline">
+            <label class="col-md-3 control-label" for="password" > Password </label>
+              <input class="form-control col-md-5 input-md" id = "password" name = "password" type="password" placeholder = "password" required>
+              <i id ="toggle-password" class = "fa fa-fw fa-eye-slash field-icon col-md-1" onclick="toggle_ps()"></i>
+        </div>
+
+        <div class="form-group form-inline">
+          <label class="col-md-3 control-label" for="confirm-password" > Confirm Password </label>
+              <input class="form-control col-md-5 input-md" id = "confirm-password" name = "confirm-password" type="password" placeholder="Confirm Password" required>
+              <i id ="toggle-confirm-password" class = "fa fa-fw fa-eye-slash field-icon col-md-1" onclick="toggle_c_ps()"></i>
+        </div>
+    <!----Chose Account to be registered-------->
+       <div class="form-group ">
+         <label class="col-md-3 control-label"> Want to be a Manager? </label>
+          <label class="toggle">
+              <input type="radio" name="toggle-manager" value="yes" checked> <span class="label-text">Yes</span>
+              <input type="radio" name="toggle-manager" value="no"> <span class="label-text">No</span>
+          </label>
+      </div>
+
+      <div class="form-group ">
+       <label class="col-md-3 control-label" > Want to be a Canvasser? </label>
+          <label class="toggle">
+              <input type="radio" name="toggle-canvasser" value="yes" checked> <span class="label-text">Yes</span>
+            <input type="radio" name="toggle-canvasser" value="no"> <span class="label-text">No</span>
+          </label>
+      </div>
+       <label class="col-md-6" ><span style = "color: blue">(Please Chose at least one account type) </span></label>
+    <hr><br><br>
+    <!------functional Buttons------->
+     <div class="inline-block" style="word-spacing: 22px; padding-left:10%;">
+      <button class="btn btn-primary" type="submit" onclick="submit_fun()"><i class="fa fa-check-circle"></i> Submit </button>
+      <button  type ="button" class="btn btn-danger" onclick="document.getElementById('signup-modal').style.display='none'" ><i class="fa fa-minus-square"></i> Cancel </button>
+     </div>
+    </div>
+  </div>
+</form>
+</div>
+
+<!-------------------------------------Log In modal------------------->
+<div id="login-modal" class="modal" {% if index|int == 2 %} style="display: block;" {% else %} style="display: none;" {% endif %}>
+  <span onclick="window.location.href='{{ url_for('auth.home', index = 0) }}'" class="close" title="Close">&times;</span>
+    <img class="title-logo" src="/static/image/title_logo.png"/>
+  <!---------------Login Form----------->
+  <form class="form-signin" method="post" id ="login-form" action = "{{ url_for('auth.login') }}">
+      <h2 class="form-signin-heading">Sign In</h2>
+      <br/>
+    <!-- Select Role Account to LogIn---->
+     <div class="form-check  form-check-inline">
+        <label class="toggle">
+          <input type="radio" name="toggle" value ="admin" {% if not('info' in session) %} checked {% elif (session['info']['role'] == 'admin') %} checked {% endif %} value="admin"> <span class="label-text">Admin</span>
+       </label>
+    </div>
+    <div class="form-check  form-check-inline">
+      <label class="toggle">
+            <input type="radio" name="toggle" value="manager" {% if (('info' in session) and session['info']['role'] == 'manager') %} checked {% endif %} > <span class="label-text">Manager</span>
+      </label>
+    </div>
+    <div class="form-check  form-check-inline">
+        <label class="toggle">
+            <input type="radio" name="toggle" value="canvasser"  {% if (('info' in session) and session['info']['role'] == 'canvasser') %} checked {% endif %} > <span class="label-text">Canvasser</span>
+        </label>
+    </div>
+  <!-----------------Email And Password------------------>
+      <label for="login-email" class="sr-only">Email address</label>
+      <input type="email" name="login-email" id="login-email" class="form-control" placeholder="Email address" {% if ('info' in session) %} value ="{{ session['info']['email'] }}" {% endif %} required autofocus>
+
+      <label for="login-password" class="sr-only">Password</label>
+      <input type="password" name="login-password" id="login-password" class="form-control" placeholder="Password" {% if ('info' in session) %} value ="{{ session['info']['password'] }}" {% endif %} required>
+  <!----------------Remember Me---------------->
+      <div class="checkbox">
+        <label> <input type="checkbox" name="remember-me" {% if ('info' in session) %} checked {% endif %} > Remember me </label>
+      </div>
+  <!--Sign In   Button--->
+      <button class="btn btn-lg btn-primary btn-block" type="submit"> Sign in </button>
+  </form>
+</div>
+</body>
+</html>

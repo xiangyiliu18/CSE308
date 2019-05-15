@@ -1,0 +1,72 @@
+{% extends "header.html" %}
+
+{% block header %}
+    <link rel="stylesheet" href="/static/css/bs_css/dataTables.bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/js_css/jquery.dataTables.min.css"> 
+    <script src="/static/css/bs_css/select2.css"></script>  
+
+
+    <script defer src="/static/javascript/manager_js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
+    <script defer src="/static/javascript/bs_js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+    <script src="/static/javascript/bs_js/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <script src="/static/jquery/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> 
+
+    <script src="/static/jquery/jquery.dataTables.min.js"></script>
+    <script src="/static/javascript/bs_js/dataTables.bootstrap4.min.js"></script>
+    <script src="/static/javascript/select2.js"></script>
+
+    <!-----------Customize Part------------>
+    <link rel="stylesheet" href="/static/css/manager.css">
+    {% block newHeader %}{% endblock %}
+{% endblock %}
+
+<!----------------------BODY PART---------------------------------------------->
+{% block body %}
+<div class="wrapper">
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h3 style ="color: black; text-align: center;">{{session['info']['name']}}</h3>
+        </div>
+
+        <ul class="list-unstyled components">
+            <p>Campaign Managment</p>
+            <hr/>
+            <li {% if index < 5 %} class="active" {% endif %}>
+                <a href="{{ url_for('manager.viewCampaign') }}" >View Campaigns</a>
+            </li>
+            <li  {% if index == 5 %} class="active" {% endif %}>
+                <a href="{{ url_for('manager.createCampaign', u_email = session['info']['email'] )}}" >Create Campaigns</a>
+            </li>
+            <li id ="edit_cam" {% if index == 6  %} class="active" {% endif %}>
+                <a href="{{ url_for('manager.editCampaign', u_email = session['info']['email'] ) }}">Edit Campaigns</a>
+            </li>
+            <li  {% if index == 7 %} class="active" {% endif %}>
+                <a href="{{ url_for('manager.view_assignment', u_email = session['info']['email'] ) }}">View Assignment</a>
+            </li>
+            
+            <li {% if index == 8 %} class="active" {% endif %} id ="view_result">
+                <a href="{{ url_for('manager.view_result') }}">View Results</a>
+            </li>
+        </ul>
+    </nav>
+    <!------------------Main Content Part--------------- -->
+    <div id="content">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="navbar-btn">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <button class="btn btn-dark d-inline-block d-lg-none ml-auto" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <i class="fas fa-align-justify"></i>
+                    </button>
+                 {% block title %}{% endblock %}
+            </div>
+       </nav>
+       {% block main %}{% endblock %}
+   </div>
+ </div>
+     <script  src="/static/javascript/manager_js/campaign.js"></script>
+     {% block script %} {% endblock %}
+{%  endblock %}

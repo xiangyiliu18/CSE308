@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+	{% block newHeader %}
+	<link rel="stylesheet" type="text/css" href="/static/css/multi.css">
+    <script src="/static/jquery/jquery-linenumbers.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="/static/css/create_campaign.css">
+<!---------- Alert Flash Message-------------->
+    <script>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+       {% for msg in messages%}
+             alert('{{ msg}}');
+             {% endfor %}
+     {% endif %}
+  {% endwith %}
+</script>
+	{% endblock %}
+    {% block title %} <h3 id = "title"> Create Compaigns System </h3> {% endblock %}
+{%block main %}
+<!-----------------Create Compaign------------------>
+<br/>
+  <div class="container ">
+    <form  method="post" action ="{{url_for('manager.createCampaign', u_email = session['info']['email']) }}" role="form">
+  <!---------------------------Compaing Name--------------------->
+    <div class="form-group form-inline">
+         <label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for="name"> Compaign Name : </label>
+              <input class="form-control col-lg-5 input-md" id="name" type="text" name="name" placeholder="New unique Comapign Name" required autofocus>
+    </div>
+    <hr/><br/>
+     <!---------------------------Select Managers-------------------->
+     <div class="form-group">
+     	<i class="fa fa-angle-double-right prefix"></i><label class="col-lg-3" style="font-weight: bold; font-size: 18px;" for ="managers"> Choose Managers: </label>
+         <select multiple="multiple" name="managers" id="managers" required>
+                <option value="{{ session['info']['email']}}|{{ session['info']['name']}}" selected disabled>{{ session['info']['name']}} ({{ session['info']['email']}}) (campaign's creator)</option>
+                {% for ele in managers %}
+                    <option value="{{ ele }}">{{managers[ele]}}({{(ele)}})</option>
+                {% endfor %}
+         </select>
+     </div>
+    <hr/><br/>
+      <!---------------------------Select Canvassers------------------->
+     <div class="form-group">
+     	<i class="fa fa-angle-double-right prefix"></i><label class="col-lg-3" style="font-weight: bold; font-size: 18px;" for ="canvasser"> Choose Canvassers: </label>
+         <select multiple="multiple" name="canvassers" id="canvassers" required>
+                {% for ele in canvassers %}
+                    <option value = "{{ ele }}">{{canvassers[ele]}}({{(ele)}})</option>
+                {% endfor %}
+         </select>
+     </div>
+   <hr/>
+
+  <!---------------------------Dates Part--------------------->
+    <i class="fa fa-angle-double-right prefix"></i><label class="col-lg-2" style="font-weight: bold; font-size: 18px;">Date Settings: </label>
+    <div class="form-group form-inline">
+            <div style ="margin-left:5%;font-size:16px; font-weight: bold;">From :</div>
+            <input style ="margin-left:1%;" class ="form-control col-lg-3" type="date" data-date-format="yyyy-mm-dd" name="start_date" id ="start_date" onchange='validDates()' required>
+            <div style ="margin-left:2%;font-size:16px; font-weight: bold;">To :</div>
+            <input style ="margin-left:1%;" class ="form-control col-lg-3" type="date" data-date-format="yyyy-mm-dd" name="end_date" id ="end_date" onchange='validDates()' required >
+    </div>
+    <hr/><br/>
+  <!---------------------------Questions Part--------------------->
+    <div class="form-inline">
+     <i class="fa fa-angle-double-right prefix"></i><label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for ="question">Set Questions: </label>
+    </div>
+     <br/>
+<textarea class="form-control" rows="5" id="questions_text" name="questions_text" placeholder="Please enter one yes/no queston per line(eg: Did you heard of our product before?)"></textarea>
+    <hr/><br/>
+ <!---------------------------Talking Point Part--------------------->
+     <div class="form-group form-inline">
+    	<label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for="talking">Set Talking Point: </label>
+    	 <textarea class="form-control col-lg-5" rows="3" id="talking" name='talking' placeholder="Text describing what the canvasser should day during visits" value="None"></textarea>
+    </div>
+    <hr/><br/>
+ <!---------------------------Duration Part--------------------->
+     <div class="form-group form-inline inputContainer">
+    	<label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for="duration">Set Duration:</label>
+            <input class="form-control col-lg-5 input-md" type="number" id="duration" name="duration" min="1" max="300" data-bind="value:duration" placeholder="Duration should be between 1 and 300 minutes"data-bv-integer-message="The value is not an integer" value="1" required /><span style="padding-left: 5px; font-size: 18px">minutes</span>
+    </div>
+    <hr/><br/>
+ <!---------------------------Location--------------------->
+    <div class="form-inline">
+     <i class="fa fa-angle-double-right prefix"></i><label class="col-lg-2" style="font-weight: bold; font-size: 18px;">Set Locations: </label>
+    </div>
+     <br/>
+<textarea class="form-control" rows="5" id="locations_text" name="locations_text" placeholder="Contains one address per line, in the following format: NUMBER, STREET, UNIT, CITY, STATE, ZIP" required></textarea>
+    <hr/><br/>
+    <div class="form-group form-inline">
+        <label class="col-lg-2" style="font-weight: bold; font-size: 18px;" for ="location">Search location: </label>
+         <input class="form-control col-lg-5 input-md" id="location" type="text" name ="location" placeholder="Search locations here">
+         <a class ="btn btn-primary" id="add_location" onclick='add_location()'> Add New Location </a>
+    </div>
+    <div class="form-group form-inline">
+		<div id="map" name="map_location" class="col-lg-8" style="margin-left: 10%; height: 350px;background-color: grey"></div>
+    </div>
+    <hr/><br/>
+    <div class="form-group form-inline" style="margin-left: 30%">
+        <button class="btn btn-success btn-lg" id="submit" name="submit" type="submit" onclick="check_submit()"> <i class="fa fa-plus-circle"></i> Create Campaign </button>
+    </div>
+    </form>
+  </div>
+  {% block script %} 
+
+    <script src="/static/javascript/manager_js/multi.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGuEpRycbTYDCcS6uxiot0x0eSLkpTbiY&libraries=places&callback=initAutocomplete"></script>
+    <script  src="/static/javascript/manager_js/create_campaign.js"></script> 
+    {% endblock%}
+{%  endblock %}

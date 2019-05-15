@@ -1,0 +1,286 @@
+{% extends "header.html" %}
+
+{% block header %}
+    <!-- Custom styles for this login page -->
+    <link href="/static/css/done_canvas.css" rel="stylesheet">
+    <link href="/static/css/view_canvasser_ass.css" rel="stylesheet">
+     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <!----------The script to inital location Makers---->
+    {% if locations %}
+   <script type="text/javascript">
+      $(document).ready(function () {
+          // Get all locations
+          document.getElementById('submit').disabled=false;
+          var locations=[]
+          {% for instance in locations %}
+            var one_location=[];
+            one_location.push('{{instance.location}}', '{{instance.lat}}','{{instance.lng}}','{{ instance.order}}');
+            locations.push(one_location);
+         {% endfor %}
+        // Generate Map
+        var mapOptions = {
+            center: new google.maps.LatLng(40.9256538, -73.140943),
+            zoom: 13
+          }
+          map = new google.maps.Map(document.getElementById("map"), mapOptions);
+              var infowindow = new google.maps.InfoWindow();
+        // Inital Markers
+          var marker, i;
+          var bounds = new google.maps.LatLngBounds();
+
+          var ratings = []
+          {% for instance in task_results %}
+            ratings.push(parseFloat('{{instance.rating}}'));
+          {% endfor %}
+
+        // Create one marker for each location
+
+        var iconBase = '/static/image/pins/';
+        var icons = {
+          0: {
+            icon: iconBase + 'icon0.png'
+          },
+          0.5: {
+            icon: iconBase + 'icon0.5.png'
+          },
+          1: {
+            icon: iconBase + 'icon1.png'
+          },
+          1.5: {
+            icon: iconBase + 'icon1.5.png'
+          },
+          2: {
+            icon: iconBase + 'icon2.png'
+          },
+          2.5: {
+            icon: iconBase + 'icon2.5.png'
+          },
+          3: {
+            icon: iconBase + 'icon3.png'
+          },
+          3.5: {
+            icon: iconBase + 'icon3.5.png'
+          },
+          4: {
+            icon: iconBase + 'icon4.png'
+          },
+          4.5: {
+            icon: iconBase + 'icon4.5.png'
+          },
+          5: {
+            icon: iconBase + 'icon5.png'
+          },
+        };
+        for (i = 0; i < locations.length; i++) { 
+          marker = new google.maps.Marker({
+            position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+            label:"#"+ locations[i][3],
+            title: locations[i][0],
+            {% if assignment.done %}
+            icon: {
+              scaledSize: new google.maps.Size(22, 32),
+              url: icons[ratings[i]].icon
+            },
+            {% endif %}
+            map: map
+          });
+          bounds.extend(marker.getPosition());
+          google.maps.event.addListener(marker, 'click', (function(marker, i) {
+            return function() {
+              infowindow.setContent(locations[i][0]);
+              infowindow.open(map, marker);
+              map.setCenter(marker.getPosition());
+              map.setZoom(16);
+              // If close infowindow, then go back to default mapsetting
+              google.maps.event.addListener(infowindow, 'closeclick', function() {
+                    map.fitBounds(bounds);
+              });
+            }
+          })(marker, i));
+        }
+        // Let us to see all markers together
+        map.fitBounds(bounds); 
+      });
+</script>
+{% endif %}
+{% if assignment %}
+<script type="text/javascript">
+      // Load Charts and the corechart package.
+      google.charts.load('current', {'packages':['corechart']});
+
+      // Draw the pie chart when Charts is loaded.
+      
+
+      {% for i in range(statistic['questions']|length)%}
+      google.charts.setOnLoadCallback(drawChart{{i}});
+      function drawChart{{i}}() {
+
+        
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Question');
+        data.addColumn('number', 'NumOfAnswers');
+        data.addRows([
+          ['Yes', {{statistic['answers'][i][0]}}],
+          ['No', {{statistic['answers'][i][1]}}],
+          ['Do not Care', {{statistic['answers'][i][2]}}]
+        ]);
+
+        
+        var options = {title:'{{statistic['questions'][i]}}',
+                       width:400,
+                       height:300};
+
+        // Instantiate and draw the chart
+        var chart = new google.visualization.PieChart(document.getElementById("{{statistic['questions'][i]}}"));
+        chart.draw(data, options);
+      }
+       {% endfor %}
+</script>
+{% endif %}
+{% endblock %}
+
+<!----------------------BODY PART---------------------------------------------->
+{% block body %}
+      <h2 style="text-align: center;padding-top:10px;">View Results</h2>
+      <hr/>
+    <button class="btn btn-info" type="button" style="margin-left:5%" id="canHome" onclick="window.location.href='{{ url_for( 'manager.manPage')}}' ">Home Page</button><br/><br/>
+    <!-------------Basic Instruction--------------->
+     <h4 style="margin-left:5%"><span style="padding-left:5px; font-weight: bold;">Basic Instructions : </span></h4>
+     <h5 style="margin-left:10%">Select a canvassing assignment from the list below to see details<br/>
+        <ul>
+              <li>Include a map with markers at the locations</li>
+              <li>Include a list wit addresses of the locations</li>
+        </ul>  
+    </h5><hr/>
+    
+    <form id="assignment_form" method="post" action="{{ url_for('manager.view_result')}}" role="form">
+    <!-- ----------- All Assignments on List -->
+        <div class="form-group">
+            <h2 for="assignment" style="margin-left: 2%;"><span class="badge badge-pill badge-success">All assignments (select one) :</span></h2>
+            <br/>
+            <div class="row">
+              <select class="form-control col-6" id="assignment" name="assignment" onchange="toggle_btn()" required autofocus>
+
+                <option value="None">Choose...</option> 
+                <!------ Upcoming Assignment------->
+                <optgroup label="All Assignments: ">
+                    {% for assign in assign_info %}
+                 <!-------instance = Assignment object----------->
+                    <option value="{{assign[0]}}">Assignment #{{assign[0]}} on {{assign[3]}} for Campaign {{assign[6]}} by Canvasser {{assign[5]}}</option>
+                    {% endfor %}
+                </optgroup>
+              </select>
+              <button class="btn btn-primary" style="margin-left: 1%;" name="submit" id="submit" type="submit"> See details </button>
+            </div>
+        </div>
+    </form>
+    <br/><hr/><br/>
+  <!----------- Begin here to show assignment information----------->
+<h2 style="margin-left: 2%; text-align: center;"> <u>The Assignment On:{% if assignment %} {{assignment.theDate}} for Campaign: {{campaign.name}} {%endif%}</u></h2>
+
+<h2 style="margin-left: 2%; text-align: center;"> <u>The Assignment is {% if assignment %}{% if assignment.done %}Done{%else%}Not Done{%endif%}{%endif%}</u></h2>
+
+
+<h2 style="margin-left: 2%; margin-bottom: 1%;"><span class="badge badge-pill badge-success">The detail assignment for locations :</span></h2>
+  <div class="row">
+<!----------------Locations on List------->
+<div class="panel panel-primary col" id="result_panel1" style="margin-left: 1%;">
+      <div class="panel-heading" style="margin-left: 5%;"><h3 class="panel-title"><strong>Locations on List:</strong></h3>
+      </div>
+      <div class="panel-body">
+          <ul class="list-group">
+           {% for ele in locations %}
+                <a href="#" class="list-group-item list-group-item-action list-group-item-light">#{{ele.order}}: {{ele.location}} (lat= {{ele.lat}}, lng={{ele.lng}})</a>
+            {% endfor %}
+        </ul>
+      </div>
+    </div> 
+<!----------------Locations on Map------->
+  <div class="panel panel-primary col" id="result_panel" style="margin-right: 1%;">
+      <div class="panel-heading" style="margin-left: 5%;"><h3 class="panel-title"><strong>Locations on Map:</strong></h3>
+      </div>
+      <div class="panel-body">
+        <div id="map" name="map" style=" height: 300px;background-color: grey"></div>
+      </div>
+    </div> 
+  </div>
+<br/>
+
+<div class="container">
+  <img src="/static/image/color_rating_1.png" class="img-fluid"/>
+</div>
+<hr/>
+
+<!----- Statistic of this assignment---->
+{% if assignment %}
+  <div class="container">
+    <h3>The average for the ratings are {{statistic['avg_rating']}}</h3>
+  </div>
+{% endif %}
+
+{% if assignment %}
+  <div class="container">
+    <h3>The standard deviation for the ratings are {{statistic['deviation']}}</h3>
+  </div>
+{% endif %}
+
+{% if assignment %}
+<div class="container">
+  {% for q in statistic['questions']%}
+    <div class="d-flex" id="{{q}}"></div>
+    <br>
+  {% endfor %}
+</div>
+<br/><hr/>
+{% endif %}
+<!----- Basic information------>
+<div class="container" id ="detail-container" >
+        <div class="table-responsive">
+              <table id = "other2-table col-6" cellspacing="0" width="100%" class="table table-striped table-bordered table-hove" data-cache = "false" >
+               <thead class="thead-dark" colspan="1">
+                  <tr >
+                      <th  class = "col-2">Assignment</th>
+                      <th  class = "col-1">Number of Locations</th>
+                      <th  class = "col-1">Duration</th>
+                      <th  class = "col-1">Date</th>
+                  </tr>
+              </thead>
+              <tbody>
+                    {% for assign in assign_info %}
+                       <tr role="button" data-toggle="collapse" data-target="#collapseExample{{assign[0]}}" aria-expanded="false" aria-controls="collapseExample{{assign[0]}}" >
+                         <td  class = "col">{{ assign[0] }}</td>
+                         <td  class = "col">{{ assign[1] }}</td>
+                         <td  class = "col">{{ assign[2] }}</td>
+                         <td  class = "col">{{ assign[3] }}</td>
+                      </tr>
+                      <tr>
+                        <td colspan="4">
+                          <div class="collapse" id="collapseExample{{assign[0]}}">
+                          <div class="card card-body">
+                              <div><h3>Canvasser assigned: {{assign[5]}}</h3></div>
+                              <label>Assignment Addresses: </label>
+                              <div class="panel-body">
+                                  <ul class="list-group">
+                                   {% for ele in assign[4] %}
+                                        <a href="#" class="list-group-item list-group-item-action list-group-item-light">#{{ele.order}}: {{ele.location}} (lat= {{ele.lat}}, lng={{ele.lng}})</a>
+                                    {% endfor %}
+                                </ul>
+                              </div>
+
+                          </div>
+                          </div>
+                        </td>
+                      </tr>
+                     {% endfor %}
+              </tbody>
+            </table>
+        </div>
+</div>
+<hr/>
+
+
+    <!-- map js files--> 
+   
+    <script src="/static/javascript/canvasser_script/view_assignment.js" ></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGuEpRycbTYDCcS6uxiot0x0eSLkpTbiY&libraries=places&callback=initAutocomplete"></script>
+{%  endblock %}

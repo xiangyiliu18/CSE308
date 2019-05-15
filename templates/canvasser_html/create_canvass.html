@@ -1,0 +1,188 @@
+{% extends "header.html" %}
+
+{% block header %}
+    <link href="/static/css/create_canvass.css" rel="stylesheet"> 
+    <link href="/static/css/done_canvas.css" rel="stylesheet">
+    <!-- Alert for flash message-->
+    <script>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+       {% for msg in messages%}
+             alert('{{ msg}}');
+             {% endfor %}
+     {% endif %}
+  {% endwith %}
+</script>
+{% endblock %}
+<!----------------------BODY PART---------------------------------------------->
+{% block body %}
+      <h2 style="text-align: center;padding-top:10px;">Canvassing Assignment Creation</h2>
+      <hr/>
+    <button class="btn btn-info" type="button" style="margin-left:5%" id="canHome" onclick="window.location.href='{{ url_for( 'canvasser.canPage', u_name = session['info']['name'])}}' ">HomePage</button><br/><br/>
+    <!-------------Basic Instruction--------------->
+     <h5 style="margin-left:5%"><span style="padding-left:5px; font-weight: bold;">Basic Instructions : </span></h5>
+        <h5 style="margin-left:10%"> This is you current day's canvassing assignement. the next location to visit will be shown in recommended order </h5>
+        <h5 style="margin-left:10%"> You can manually change the next location by selecting it from a list of unvisited locations</h5> 
+    </h5><hr/>
+
+    <div style="float: center">
+   <!-- ----------- Basic Current Today's Assignment------>
+      <div class="panel panel-primary col" id="current_assignment">
+          <div class="card" style ="margin-left: 5%;">
+            <h5 class="card-header">Current Day's Canvassing Assignment</h5>
+            <div class="card-body" style ="margin-left: 5%;">
+              <h5 class="card-title btn btn-secondary btn-block">Assignment Details</h5>
+              <div>
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item" style="font-weight: bold;"><mark>Campaign Name:</mark>&nbsp&nbsp {{ ass_info['campaign_name'] }} </li>
+
+                    <li class="list-group-item" style="font-weight: bold;"><mark>The Date :</mark>&nbsp&nbsp {{ ass_info['current_ass'].theDate }} </li>
+                    <li class="list-group-item" style="font-weight: bold;"><mark>Do you finish:</mark>&nbsp&nbsp Not Yet </li>
+                  </ul>
+              </div>
+           </div>
+        </div>
+    </div><br/>
+    <!--------- Work for the next location part------------> 
+    <div class="panel  panel-primary col" id="next_location">
+      <div class="panel-body">
+        <div class="card" style ="margin-left: 5%;">
+            <h5 class="card-header"> All Unvisited Locations </h5>
+            <div class="card-body">
+              <div class="alert alert-success" role="alert">
+          <i class="fa fa-2x fa-info-circle"></i><span style ='margin-left: 1%; font-size: 18px; color: black;'>If you did not visited any locations, you cannot change the next location.  </span>
+            </div>
+      <!-------------- Next locations(unvisited) list--------------->
+        {% if ass_info['unvisited'] is defined and ass_info['unvisited']|length > 0 %}
+            <form  method="post" action ="{{ url_for('canvasser.change_next_location')}}" role="form">
+      <!------------- Map And Direction Panel----------------------->
+              <div class="form-group form-inline" style="margin-left: 5%;">
+                  <label style="padding-right: 10px; font-weight: bold;" for="start"><mark>The Current Location:</mark></label>
+                  <input type="text" class="form-control col-md-5" value="{{ ass_info['rec_visited'].location }}" id="start" name="start" readonly>
+              </div>
+      <!------ The next location is the fist of unvisited locations--->
+              <div class="form-group form-inline" style="margin-left: 5%;">
+                  <label style="padding-right: 10px; font-weight: bold;" for="next_loc"><mark>The Next location:</mark></label>
+                  <input type="text" class="form-control col-md-5" value="{{ ass_info['unvisited'][0].location}}" id="next_loc" name="next_loc" disabled>
+              </div>
+              <div class="form-group form-inline" style="margin-left: 5%;">
+                <label style="padding-right: 10px; font-weight: bold;" for="end"><mark>All Unvisited Locations:</mark></label>
+                <select class="form-control col-5" id="end" name="end" onchange="calcRoute();"required autofocus>
+                     {% for instance in ass_info['unvisited'] %}
+                        <option value="{{instance.id}}|{{instance.assignment_id}}">{{ instance.location }}</option>
+                      {% endfor %}
+                  </select>
+                  <button class="btn btn-primary" style="margin-left: 1%;" id="submit" name="submit" type="submit">Change the Next Location </button>
+              </div>
+          </form>
+          <!------------ Choose Travel Mode ----------------------->
+        <div id="floating-panel">
+          <b>Mode of Travel: </b>
+                <select id="mode"  onchange="calcRoute();">
+                  <option value="DRIVING">Driving</option>
+                  <option value="WALKING">Walking</option>
+                  <option value="BICYCLING">Bicycling</option>
+                  <option value="TRANSIT">Transit</option>
+                </select>
+        </div>
+       <!------------Map ----------------------->
+        <div class="row" style="margin-left: 5%;">
+              <div id="map" name="map"></div>
+              <div class="card" style="margin-left: 1%;">
+                <div class="card-body">
+                    <div id="right-panel" style="margin-top: 1%;"><span style="font-size: 18px"><mark>Detailed Travel Directions</mark></span></div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item" style="font-weight: bold;"><mark>The Next Location:</mark> Without any next locations </li>
+            </ul><br/>
+        {% endif %}
+          </div>
+        </div>
+    </div>
+  </div><br/>
+  <!------Work for submitting results-------->
+    <div class="panel panel-primary col" id="result">
+      <div class="panel-body">
+        <div class="card" style ="margin-left: 5%;">
+            <h5 class="card-header"> Submit The Location Result</h5>
+            <div class="card-body">
+      <!-------Form for submitting answered questions of the assignned task---------->
+            <form  method="post" action ="{{ url_for('canvasser.submit_result',location=ass_info['unvisited'][0].id)}}" role="form">
+    <!------------- For Spoke To --------------------------->
+             <div class="form-group">
+                <h5><i class="fa fa-question-circle" aria-hidden="true" style="padding-right: 10px; font-weight: bold;"></i><label>Did you spoke to ?</label></h5><br/>
+                 <div class ="form-check form-check-inline"style="margin-left: 10%;">
+                   <label class="container">Yes
+                      <input type="radio" name="spoke_to" value="1" required>
+                      <span class="checkmark"></span>
+                  </label>
+                  <label class="container">No
+                      <input type="radio" name="spoke_to" value="0" checked required>
+                      <span class="checkmark"></span>
+                  </label>
+                 </div>
+            </div>  
+    <!-----------------For Rating, if you did not enter rating, mean 0 ----------->
+      <div class="form-group">
+        <h5><i class="fa fa-question-circle" aria-hidden="true" style="padding-right: 10px;"></i><label>How do you rate your overall experience for visiting this location ?</label></h5>
+         <div class="row">
+            <div class="col-lg-8 text-center rating-star">
+                  <input type="radio" id="star5" name="rating" value="5" /><label class="full" for="star5" title="Awesome - 5 stars"></label>
+                  <input type="radio" id="star4" name="rating" value="4" /><label class="full" for="star4" title="Pretty good - 4 stars"></label>
+                  <input type="radio" id="star3" name="rating" value="3" /><label class = "full" for="star3" title="Meh - 3 stars"></label>
+                  <input type="radio" id="star2" name="rating" value="2" /><label class="full" for="star2" title="Kinda bad - 2 stars"></label>
+                  <input type="radio" id="star1" name="rating" value="1" /><label class ="full" for="star1" title="Sucks big time - 1 star"></label>
+            </div>
+            <a href="#" onclick="clear_rate()"> Clear your rating </a>
+        </div>
+      </div>   
+<!-------------------- Questionaires---------------------------->
+  <hr/>
+      <div class="form-group">
+        <h5><i class="fa fa-question-circle" aria-hidden="true" style="padding-right: 10px;"></i><label>Answers to Questionaires</label></h5>
+      </div>
+      {% for questions in ass_info['questions'] %}
+      <div class="form-group" style="margin-left: 5%;">
+         <h5><i class="fa fa-quora">:</i><label>{{questions.question}}</label></h5>
+            <div class="form-check"style="margin-left: 10%;">
+                <label class="container">Without
+                    <input type="radio" name="{{questions.id}}" value="2" checked required>
+                    <span class="checkmark"></span>
+                </label>
+                 <label class="container">Yes
+                    <input type="radio" name="{{questions.id}}" value="1" required>
+                    <span class="checkmark"></span>
+                </label>
+                <label class="container">No
+                    <input type="radio" name="{{questions.id}}" value="0" required>
+                    <span class="checkmark"></span>
+                </label>
+              </div>
+        </div>
+      {% endfor %}
+    <hr/>
+    <!---------------- Brief Notes----------------------->
+      <div class="form-group">
+         <h5><i class="fa fa-question-circle" aria-hidden="true" style="padding-right: 10px;"></i><label for="brief_note">Brief Notes:</label></h5>
+        <textarea class="form-control" rows="5" name="brief_note" type="text" id="comment" placeholder="Input any extra comments abouts this task" style="font-size: 20px;"></textarea>
+      </div>
+
+      <div class="form-group">
+            <button class="btn btn-success btn-lg" type="submit"> <i class="fa fa-plus-circle"></i> Submit The Result</button>
+        </div>
+       </form>
+      </div>
+    </div>
+    </div>
+  </div>
+</div><hr/><br/>
+
+
+<script type="text/javascript" src="/static/javascript/canvasser_script/create_canvass.js"></script>
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGuEpRycbTYDCcS6uxiot0x0eSLkpTbiY&callback=initMap">
+</script>    
+{%  endblock %}

@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="icon" href="/static/image/logo.png">
+    <link href="/static/css/bs_css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/js_css/jquery-ui.min.css">
+    <link rel="stylesheet" href="/static/css/bs_css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/bs_css/font-awesome.css">
+
+    <script src="/static/jquery/jquery.js"></script>
+    <script src="/static/jquery/jquery.min.js"></script>
+    <script src="/static/jquery/jquery-ui.min.js"></script>
+
+    <script src="/static/javascript/bs_js/bootstrap.min.js"></script>
+
+    <title>Super Canavsser</title>
+   
+    {% block header %} {% endblock %}
+
+  </head>
+  <body>
+  <!---------------Navagation------------------------------>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light" style =" background-size: 100%; background:url(/static/image/header.png)">
+      <a class="navbar-brand" href="#"><img src="/static/image/logo.png"  class="logo" height="40"> <strong>Super Canvasser System</strong></a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar1" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbar1">
+          <ul class="navbar-nav ml-auto">
+           <!------------Handle switching accounts if the user has any one -->
+            <li class="nav-item dropdown">
+              <a class="nav-link  dropdown-toggle active" href="#" data-toggle="dropdown"> <strong>{% if (session['info']['roles']|length) > 1 %} Switch Accounts {% else %} Home {% endif %}</strong> </a>
+                {% if (session['info']['roles']|length) > 1 %}
+                  <ul class="dropdown-menu">
+                      {% for ele in session['info']['roles'] %}
+                          {% if ele != session['info']['account'] %}
+                            <li><a class="dropdown-item" {% if ele == 'admin' %} href="{{ url_for('admin.adminPage', u_name = session['info']['name'] ) }}" {% elif ele == 'manager' %} href="{{ url_for('manager.manPage', u_name = session['info']['name'] ) }}"  {% elif ele == 'canvasser' %} href="{{ url_for('canvasser.canPage', u_name = session['info']['name'] ) }}" {% endif %} > <mark> <strong>{{ ele|upper }}</strong></mark></a></li>
+                          {% endif %}
+                      {% endfor %}
+                  </ul>
+                {% endif %}
+          </li>
+      <!------------Redirect to profile html -->
+            <li class="nav-item">
+               <a href = "{{ url_for('auth.profile', u_email=session['info']['email'])}}"> <button class="btn btn-outline-dark" type="button"> Profile </button> </a>
+           </li>
+          <!----------Handle for logout--------->
+          <li class="nav-item">
+              <a href = "{{ url_for('auth.logout') }}"> <button class="btn btn-outline-dark" type="button" align="middle"  style="margin-left: 20px"> Log out </button> </a>
+          </li>
+        </ul>
+    </div>
+  </nav>
+
+    {% block body %} {% endblock %}
+  </body>
+</html>
